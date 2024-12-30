@@ -1,133 +1,172 @@
-# Dockerfile Analyzer and Optimizer
+# Dockerfile Analyzer
 
-A powerful tool that uses LLMs to analyze, secure, and optimize your Dockerfiles. The tool provides detailed security recommendations, optimization suggestions, and automatically generates an improved version of your Dockerfile.
+A Python tool that uses LangChain and OpenAI's GPT-4 to analyze Dockerfiles for security and optimization opportunities. This tool provides detailed reports including security scores, optimization metrics, and suggestions for improvements.
 
 ## Features
 
-- 🔍 Deep analysis of Dockerfile security issues
-- ⚡ Performance optimization recommendations
-- 🎯 Best practices compliance checking
-- 📊 Security and optimization scoring
-- 📝 Detailed markdown reports
-- 🔄 Automatic generation of optimized Dockerfiles
+- Security analysis with scoring
+- Optimization metrics calculation
+- Cache efficiency evaluation
+- Build time analysis
+- Maintainability scoring
+- Detailed recommendations
+- Optimized Dockerfile generation
 
 ## Installation
 
-1. Clone the repository:
+1. Create a new directory for your project and set up a Python virtual environment:
+
 ```bash
-git clone https://github.com/yourusername/dockerfile-analyzer
+git clone git@github.com:ajib-jawwad/dockerfile-analyzer.git
 cd dockerfile-analyzer
-```
-
-2. Create a virtual environment:
-```bash
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
 ```
 
-3. Install dependencies:
+2. Install required packages:
+
 ```bash
-pip install langchain-openai pyyaml
+pip install langchain-openai langchain-core langchain-community openai
 ```
 
-4. Set up your OpenAI API key:
+## Project Structure
+
+```
+dockerfile-analyzer/
+├── venv/
+├── dockerfile_analyzer.py
+├── main.py
+└── Dockerfile
+```
+
+## Configuration
+
+Before running the analyzer, you need to set up your OpenAI API key:
+
 ```bash
-export OPENAI_API_KEY='your-api-key-here'  # On Windows: set OPENAI_API_KEY=your-api-key-here
+# On Unix/Linux/MacOS
+export OPENAI_API_KEY='your-api-key-here'
+
+# On Windows (Command Prompt)
+set OPENAI_API_KEY=your-api-key-here
+
+# On Windows (PowerShell)
+$env:OPENAI_API_KEY='your-api-key-here'
 ```
 
 ## Usage
 
-### Basic Usage
+1. Create a Dockerfile you want to analyze. Example:
 
-1. Place your Dockerfile in the project directory
-2. Run the analyzer:
-```bash
-python dockerfile_analyzer.py
+```dockerfile
+FROM python:3.9
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["python", "app.py"]
 ```
 
-The tool will generate:
-- A detailed analysis report (`dockerfile_analysis_report.md`)
-- An optimized version of your Dockerfile (`Dockerfile.optimized`)
+2. Run the analyzer:
 
-### Using as a Library
+```bash
+python main.py
+```
+
+The tool will generate a report containing:
+- Security Score (0-100)
+- Optimization Score (0-100)
+- Optimization Metrics:
+  - Layer Count
+  - Estimated Size
+  - Cache Efficiency
+  - Build Time Score
+  - Maintainability Score
+- Detailed Report
+- Optimized Dockerfile
+
+## Code Components
+
+### Main Script (main.py)
 
 ```python
+import os
 from dockerfile_analyzer import DockerfileAnalyzer
 
-# Initialize the analyzer
-analyzer = DockerfileAnalyzer(api_key='your-api-key-here')
+def main():
+    # Get API key from environment variable
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        raise ValueError("Please set the OPENAI_API_KEY environment variable")
 
-# Analyze a Dockerfile
-result = analyzer.analyze_dockerfile('path/to/your/Dockerfile')
+    try:
+        # Initialize the analyzer
+        analyzer = DockerfileAnalyzer(openai_api_key=api_key)
 
-# Generate a report
-report = analyzer.generate_report(result)
+        # Analyze the Dockerfile
+        result = analyzer.analyze_dockerfile("./Dockerfile")
 
-# Save the optimized Dockerfile
-analyzer.save_optimized_dockerfile(result, 'Dockerfile.optimized')
+        # Generate and print the report
+        report = analyzer.generate_report(result)
+        print(report)
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+
+if __name__ == "__main__":
+    main()
 ```
 
-## Analysis Features
+### Analyzer Class (dockerfile_analyzer.py)
 
-The tool checks for:
+The `DockerfileAnalyzer` class handles:
+- Dockerfile parsing
+- LLM interaction
+- Analysis processing
+- Report generation
 
-### Security
-- Base image security
-- Root user usage
-- Secure package installation
-- Secret handling
-- Permission settings
-- Known vulnerabilities
+## Example Output
 
-### Optimization
-- Multi-stage builds
-- Layer optimization
-- Cache utilization
-- Image size reduction
-- Build time improvement
+The tool generates a formatted report that looks like this:
 
-### Best Practices
-- Documentation
-- Maintainability
-- Version pinning
-- Health checks
-- Resource management
-
-## Understanding the Results
-
-### Security Score
-The security score (0-100) considers:
-- Critical security issues
-- Base image security
-- Permission configurations
-- Secret management
-- Network security
-
-### Optimization Score
-The optimization score (0-100) evaluates:
-- Build efficiency
-- Image size
-- Layer management
-- Cache usage
-- Resource efficiency
-
-## Example Report
-
-The generated report includes:
 ```markdown
-# Dockerfile Analysis Report
+## Dockerfile Analysis Report
 
-## Scores
-Security Score: 85/100
-Optimization Score: 78/100
+### Scores
+- Security Score: 85/100
+- Optimization Score: 78/100
 
-## Issues Found
+### Optimization Metrics
+- Layer Count: 5
+- Estimated Size: 985MB
+- Cache Efficiency: 90/100
+- Build Time Score: 85/100
+- Maintainability Score: 88/100
 
-### HIGH Severity Issues
-**security**
-- Description: Running as root user
-- Recommendation: Add 'USER nonroot' instruction
-- Line Number: 1
+### Detailed Report
+[Detailed analysis of the Dockerfile]
 
-[...]
+### Optimized Dockerfile
+[Optimized version of the input Dockerfile]
 ```
+
+## Troubleshooting
+
+If you encounter any issues:
+
+1. Ensure all required packages are installed:
+```bash
+pip install langchain-openai langchain-core langchain-community openai
+```
+
+2. Verify your OpenAI API key is set correctly in your environment variables
+
+3. Check that your Dockerfile exists in the specified path
+
+## Dependencies
+
+- langchain-openai
+- langchain-core
+- langchain-community
+- openai
+- Python 3.7+
